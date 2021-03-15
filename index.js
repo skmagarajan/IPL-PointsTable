@@ -9,10 +9,6 @@ app.get('/',(req,res)=> {
 	res.send({hi: "Hello"});
 });
 
-app.listen('5001', function(){
-	console.log("App is runnning on PORT 5001");
-});
-
 const {PythonShell} =require('python-shell');
 app.post("/upload",(req,res,next)=>{
     let options = {
@@ -43,3 +39,7 @@ app.post('/test',(req,res)=> {
 app.get('/update',(req,res)=> {
 	res.sendFile(path.join(__dirname+'/test.html'));
 });
+
+const PORT = process.env.PORT || 5001;
+
+app.listen(PORT);
