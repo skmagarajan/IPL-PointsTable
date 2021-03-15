@@ -40,6 +40,10 @@ app.get('/update',(req,res)=> {
 	res.sendFile(path.join(__dirname+'/test.html'));
 });
 
+app.get('/json', (req,res)=> {
+	res.sendFile(path.join(__dirname+'/Cricket-Fantasy-main/points/seasonPoints.json'));
+});
+
 const PORT = process.env.PORT || 5001;
 
 app.listen(PORT);
