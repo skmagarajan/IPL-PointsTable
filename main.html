@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="./css/style.css">
+<script>
+	var players = "";
+	var page_url = "https://ipltwenty20.herokuapp.com/";
+	//API to call points
+	$(document).ready(function(){
+		players = $.ajax({
+	        url : page_url+"json",
+			async: false,
+	        type: "GET",
+	        success: function(data){
+				// players = JSON.parse(data);
+				call_teams('A'); 
+				document.getElementById('A').style.display = "block"; 
+			}
+        });
+	});
+
+	function call_teams(Team){
+		// console.log(players.responseText);
+		$.ajax({
+	        url : page_url+"team/"+Team,
+	        type: "GET",
+	        success: function(data){
+	            createTable_json(data,players.responseText,Team);
+				// console.log(players.responseText);
+         	}
+        });
+	}
+
+	function createTable_json(data,points_json,Team){
+		var obj = JSON.parse(data);
+		points_json = JSON.parse(points_json);
+
+		// points_json.forEach(element => {
+		// 	only_keys = Object.keys(element);
+		// 	only_keys.forEach(key => {
+		// 		console.log(element[key].points);
+		// 	} )
+		// });
+
+		var html = "<table>";
+		var total = 0;
+		obj.forEach(function(name){
+			var id = name['Pid'];
+			// console.log(id);
+			if(points_json[0][id]){
+				points = points_json[0][id].points;
+				total += points;
+			}
+			else
+				points = 0;
+
+			html += "<tr>";
+			html += "<td>"+name['Player_name']+"</td>";
+			html += "<td>"+points+"</td>";
+			html += "</tr>";
+			// console.log(name['Pid']);
+		});
+		html += '<td>Total Points</td>';
+		html += '<td>'+total+'</td>';
+		html += "</table>";
+		document.getElementById(Team).innerHTML = html;
+	}
+
+	function openList(evt, Team) {
+		// Declare all variables
+		var i, tabcontent, tablinks;
+
+		// Get all elements with class="tabcontent" and hide them
+		tabcontent = document.getElementsByClassName("tabcontent");
+		for (i = 0; i < tabcontent.length; i++) {
+			tabcontent[i].style.display = "none";
+		}
+
+		// Get all elements with class="tablinks" and remove the class "active"
+		tablinks = document.getElementsByClassName("tablinks");
+		for (i = 0; i < tablinks.length; i++) {
+			tablinks[i].className = tablinks[i].className.replace(" active", "");
+		}
+
+		// Show the current tab, and add an "active" class to the button that opened the tab
+		document.getElementById(Team).style.display = "block";
+		evt.currentTarget.className += " active";
+		call_teams(Team);
+	}
+
+
+</script>
+</head>
+<body>
+	<!-- <div id="table"></div>
+	Tab links -->
+<div class="tab">
+	<button class="tablinks active" onclick="openList(event, 'A')">A</button>
+	<button class="tablinks" onclick="openList(event, 'B')">B</button>
+	<button class="tablinks" onclick="openList(event, 'C')">C</button>
+	<button class="tablinks" onclick="openList(event, 'D')">D</button>
+	<button class="tablinks" onclick="openList(event, 'E')">E</button>
+	<button class="tablinks" onclick="openList(event, 'F')">F</button>
+	<button class="tablinks" onclick="openList(event, 'G')">G</button>
+	<button class="tablinks" onclick="openList(event, 'H')">H</button>
+  </div>
+  
+  <!-- Tab content -->
+  <div id="A" class="tabcontent"></div>
+  <div id="B" class="tabcontent"></div>
+  <div id="C" class="tabcontent"></div> 
+  <div id="D" class="tabcontent"></div>
+  <div id="E" class="tabcontent"></div>
+  <div id="F" class="tabcontent"></div>
+  <div id="G" class="tabcontent"></div> 
+  <div id="H" class="tabcontent"></div>
+  
+
+</body>
+</html>

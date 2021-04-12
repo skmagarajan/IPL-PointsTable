@@ -3,7 +3,10 @@ from bs4 import BeautifulSoup
 import json
 import os
 import sys
+import pymongo
+import numpy as np
 
+# Returns the Playing XI for both teams in a match
 def allPlayers(team, playerTemplate):
     players = {}
     for p in team:
@@ -14,52 +17,67 @@ def allPlayers(team, playerTemplate):
 
     return players
 
+# Returns bonus points for Batsman
 def batsmanBonusPoints(runs, out, balls, sRate):
+    # Bonus points for runs scored
     runsPoints = 0
-    if runs >= 50 and runs < 100:
-        runsPoints = 8
+    if runs >= 30 and runs < 50:
+        runsPoints = 5
+    elif runs >= 50 and runs < 100:
+        runsPoints = 10
     elif runs >= 100:
-        runsPoints = 16
+        runsPoints = 20
     elif runs == 0 and out != 'not out':
-        runsPoints = -2
+        runsPoints = -10
     else:
         runsPoints = 0
     
+    # Bonus points for strike rate of the batsman
     srPoints = 0
     if balls >= 10:
-        if sRate >= 60 and sRate <= 70:
-            srPoints = -2
+        if sRate > 170:
+            srPoints = 15
+        elif sRate >= 150.01 and sRate <= 170:
+            srPoints = 10
+        if sRate >= 130 and sRate <= 150:
+            srPoints = 5
+        elif sRate >= 60 and sRate <= 70:
+            srPoints = -5
         elif sRate >= 50 and sRate <= 59.99:
-            srPoints = -4
+            srPoints = -10
         elif sRate < 50:
-            srPoints = -6
+            srPoints = -15
     
     return runsPoints + srPoints
 
+# Returns the bonus points for bowlers
 def bowlersBonusPoints(wickets, maidens, overs, economy):
+    # Bonus points for number of wickets taken
     wicketsPoints = 0
     if wickets == 3:
-        wicketsPoints = 8
+        wicketsPoints = 10
     elif wickets == 5:
-        wicketsPoints = 16
+        wicketsPoints = 20
     
+    # Bonus points for the economy of the bowler
     economyPoints = 0
     if overs >= 2:
         if economy <= 4:
-            economyPoints = 6
+            economyPoints = 15
         elif economy > 4 and economy <= 4.99:
-            economyPoints = 4
+            economyPoints = 10
         elif economy >= 5 and economy <= 6:
-            economyPoints = 2
+            economyPoints = 5
         elif economy >= 9 and economy <= 10:
-            economyPoints = -2
+            economyPoints = -5
         elif economy >= 10.01 and economy <= 11:
-            economyPoints = -4
+            economyPoints = -10
         elif economy > 11:
-            economyPoints = -6
+            economyPoints = -15
 
-    return wicketsPoints + economyPoints + (maidens * 8)
+    return wicketsPoints + economyPoints + (maidens * 10)
 
+# Returns the players who took catches
 def catches(battingInfo):
     outInfo = []
     for p in battingInfo:
@@ -80,7 +98,7 @@ def catches(battingInfo):
 
     catchesTakenBy = []
     for b in removedB:
-        if 'run out' not in b:
+        if 'run out' not in b and 'lbw' not in b and 'and' not in b:
             catchesTakenBy.append(b)
             
     catchesTakenBy = [x for x in catchesTakenBy if x != '']
@@ -105,7 +123,7 @@ def dataToBatsman(batsmanInfo, players):
                 players[p['pid']]['runouts'] = p['runouts']
                 players[p['pid']]['stumpings'] = p['stumpings']
                 
-                players[p['pid']]['points'] = int(p['runsScored']) + int(p['fours']) + (int(p['sixes']) * 2) + batsmanBonusPoints(int(p['runsScored']), p['out'], int(p['balls']), float(p['sr'])) + (p['catches'] * 8) + (p['runouts'] * 8) + (p['stumpings'] * 12)
+                players[p['pid']]['points'] = int(p['runsScored']) + int(p['fours']) + (int(p['sixes']) * 2) + batsmanBonusPoints(int(p['runsScored']), p['out'], int(p['balls']), float(p['sr'])) + (p['catches'] * 10) + (p['runouts'] * 10) + (p['stumpings'] * 10)
             except KeyError:
                 pass
     
@@ -127,15 +145,17 @@ def dataToBowlers(bowlersInfo, players):
             players[p['pid']]['runouts'] = p['runouts']
 
             try:
-                players[p['pid']]['points'] = players[p['pid']]['points'] + (int(p['wickets']) * 25) + bowlersBonusPoints(int(p['wickets']), int(p['maidens']), float(p['overs']), float(p['economy'])) + (p['catches'] * 8) + (p['runouts'] * 8)
+                players[p['pid']]['points'] = players[p['pid']]['points'] + (int(p['wickets']) * 25) + bowlersBonusPoints(int(p['wickets']), int(p['maidens']), float(p['overs']), float(p['economy'])) + (p['catches'] * 10) + (p['runouts'] * 10)
             except KeyError:
-                players[p['pid']]['points'] = (int(p['wickets']) * 25) + bowlersBonusPoints(int(p['wickets']), int(p['maidens']), float(p['overs']), float(p['economy'])) + (p['catches'] * 8) + (p['runouts'] * 8)
+                players[p['pid']]['points'] = (int(p['wickets']) * 25) + bowlersBonusPoints(int(p['wickets']), int(p['maidens']), float(p['overs']), float(p['economy'])) + (p['catches'] * 10) + (p['runouts'] * 10)
 
     return players
 
+# Returns data as dictionary
 def formDict(data):
     return {x:data.count(x) for x in data}
 
+# Extract batsman data from the response and returns the information
 def getBattingInfo(bat, firstInnCatches, firstInnRunouts, firstInnStumpings, secondInnCatches, secondInnRunouts, secondInnStumpings):
     batsmanInfo = []
     remove = 'Did not Bat'
@@ -187,6 +207,7 @@ def getBattingInfo(bat, firstInnCatches, firstInnRunouts, firstInnStumpings, sec
                     
     return batsmanInfo
 
+# Extract bowler data from the response and returns the information
 def getBowlingInfo(bowl, firstInnCatches, firstInnRunouts, secondInnCatches, secondInnRunouts):
     bowlerInfo = []
     for b in bowl:
@@ -228,6 +249,7 @@ def getBowlingInfo(bowl, firstInnCatches, firstInnRunouts, secondInnCatches, sec
 
     return bowlerInfo
 
+# Returns the bowlers who took the wickets
 def innOutBy(innBat):
     outBy = []
     for f in innBat:
@@ -238,6 +260,7 @@ def innOutBy(innBat):
     
     return outBy
 
+# Returns the players who effected runouts
 def runouts(battingInfo):
     outInfo = []
     for p in battingInfo:
@@ -272,6 +295,7 @@ def runouts(battingInfo):
 
     return runoutsDoneBy
 
+# Returns players who effected stumpings
 def stumpings(battingInfo):
     stumpingInfo = []
     for p in battingInfo:
@@ -291,9 +315,18 @@ def stumpings(battingInfo):
 
 URL = sys.argv[1]
 
+# MongoDB Connection
+client = pymongo.MongoClient('mongodb+srv://sachin:helloworld@cluster0.khq4w.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
+database = client['points']
+collection = database['seasonpoints']
+
 scoreCard = requests.get(URL).text
 soup = BeautifulSoup(scoreCard, 'html.parser')
 
+matchCount = 0
+matchName = {}
+
+# Dictionary template for a player
 playerTemplate = {
     "pid": "0",
     "name": "",
@@ -315,6 +348,7 @@ playerTemplate = {
     "stumpings": 0
 }
 
+# Extract data for first innings
 firstInn = soup.find_all('div', id='innings_1')[0]
 firstInnBat = firstInn.find_all('div', class_='cb-col cb-col-100 cb-ltst-wgt-hdr')[0]
 firstInnBat = firstInnBat.find_all('div', class_='cb-col cb-col-100 cb-scrd-itms')
@@ -324,6 +358,8 @@ firstInnScore = firstInn.find('span', class_='pull-right').get_text().split(' ')
 firstInnTeam = firstInn.find('span').get_text()
 firstInnTeam = firstInnTeam[:firstInnTeam.find(' Innings')]
 
+
+# Extract data for second innings
 secondInn = soup.find_all('div', id='innings_2')[0]
 secondInnBat = secondInn.find_all('div', class_='cb-col cb-col-100 cb-ltst-wgt-hdr')[0]
 secondInnBat = secondInnBat.find_all('div', class_='cb-col cb-col-100 cb-scrd-itms')
@@ -333,37 +369,44 @@ secondInnScore = secondInn.find('span', class_='pull-right').get_text().split(' 
 secondInnTeam = secondInn.find('span').get_text()
 secondInnTeam = secondInnTeam[:secondInnTeam.find(' Innings')]
 
+# Players took catches in both the innings
 firstInnCatches = catches(innOutBy(firstInnBat))
 firstInnCatches = formDict(firstInnCatches)
 secondInnCatches = catches(innOutBy(secondInnBat))
 secondInnCatches = formDict(secondInnCatches)
 
+# Players effected runouts in both the innings
 firstInnRunouts = runouts(innOutBy(firstInnBat))
 firstInnRunouts = formDict(firstInnRunouts)
 secondInnRunouts = runouts(innOutBy(secondInnBat))
 secondInnRunouts = formDict(secondInnRunouts)
 
+# Players effected stumpings in both the innings
 firstInnStumpings = stumpings(innOutBy(firstInnBat))
 firstInnStumpings = formDict(firstInnStumpings)
 secondInnStumpings = stumpings(innOutBy(secondInnBat))
 secondInnStumpings = formDict(secondInnStumpings)
 
+# Batting information for both the innings
 firstInnBatInfo = getBattingInfo(firstInnBat, firstInnCatches, firstInnRunouts, firstInnStumpings, secondInnCatches, secondInnRunouts, secondInnStumpings)
 secondInnBatInfo = getBattingInfo(secondInnBat, firstInnCatches, firstInnRunouts, firstInnStumpings, secondInnCatches, secondInnRunouts, secondInnStumpings)
 
+# Bowling information for both the innings
 firstInnBowlInfo = getBowlingInfo(firstInnBowl, firstInnCatches, firstInnRunouts, secondInnCatches, secondInnRunouts)
 secondInnBowlInfo = getBowlingInfo(secondInnBowl, firstInnCatches, firstInnRunouts, secondInnCatches, secondInnRunouts)
 
+# Extract the Playing XI of a match
 playingXI = soup.find_all('div', class_='cb-col cb-col-100 cb-minfo-tm-nm')
 team = playingXI[1].find_all('a') + playingXI[3].find_all('a')
 players = allPlayers(team, playerTemplate)
 
+# Fit the information of players according to the player template
 players = dataToBatsman(firstInnBatInfo, players)
 players = dataToBatsman(secondInnBatInfo, players)
 players = dataToBowlers(firstInnBowlInfo, players)
 players = dataToBowlers(secondInnBowlInfo, players)
 
-if not os.path.isfile('./Cricket-Fantasy-main/points/seasonPoints.json'):
+if collection.estimated_document_count() == 0:
     dumpPlayers = {}
     for key in players:
         try:
@@ -371,13 +414,12 @@ if not os.path.isfile('./Cricket-Fantasy-main/points/seasonPoints.json'):
         except KeyError:
             pass
     
-    with open('./Cricket-Fantasy-main/points/seasonPoints.json', 'w') as f:            
-        json.dump(dumpPlayers, f, indent=4)
+    collection.insert_many([dumpPlayers])
 
 else:
-    with open('./Cricket-Fantasy-main/points/seasonPoints.json', 'r') as f:
-        existPlayers = json.load(f)
-
+    existPlayers = list(collection.find())
+    existPlayers = existPlayers[0]
+    
     for key in players:
         if key in existPlayers:
             try:
@@ -390,11 +432,104 @@ else:
             except KeyError:
                 pass
     
-    with open('./Cricket-Fantasy-main/points/seasonPoints.json', 'w') as f:
-        json.dump(existPlayers, f, indent=4)
+    collection.delete_many({})
+    collection.insert_many([existPlayers])
 
+# Convert the match name to the desired format
+# 'csk-vs-dc-2nd-match-indian-premier-league-2021' -> '2nd-match-csk-vs-dc-indian-premier-league-2021'
 matchFileName = URL.split('/')[5]
+orderedMatchFileName = matchFileName.split('-') 
+orderedMatchFileName = np.array(orderedMatchFileName)
+idx = [3, 4, 0, 1, 2, 5, 6, 7, 8]
+matchFileName = '-'.join(orderedMatchFileName[idx])
+matchCount += 1
 
-with open('./Cricket-Fantasy-main/points/matchPoints/' + matchFileName + '.json', 'w') as f:
-    json.dump(players, f, indent=4)
-    print(matchFileName + ' is done!')
+matchDB = client['matches']
+if matchFileName not in matchDB.list_collection_names():
+    col = matchDB[matchFileName]
+    col.insert_many([players])
+
+matchesCompletedCollection = matchDB['matchesCompleted']
+
+if matchesCompletedCollection.estimated_document_count() == 0:
+    matchName[str(matchCount)] = matchFileName
+    matchesCompletedCollection.insert_many([matchName])
+else:
+    mName = list(matchesCompletedCollection.find())
+    mName = mName[0]
+    if '_id' in mName:
+        del mName['_id']
+    matchCount = len(mName)
+    mName[str(matchCount+1)] = matchFileName
+    matchesCompletedCollection.delete_many({})
+    matchesCompletedCollection.insert_many([mName])
+
+print("Updated")
+
+# # If no season points file, create one and add the players name, id and points of the match to the file
+# # if not os.path.isfile('./Cricket-Fantasy-main/points/seasonPoints.json'):
+#     dumpPlayers = {}
+#     for key in players:
+#         try:
+#             dumpPlayers[players[key]['pid']] = {'name': players[key]['name'], 'points': players[key]['points']}
+#         except KeyError:
+#             pass
+    
+#     with open('./Cricket-Fantasy-main/points/seasonPoints.json', 'w') as f:  
+#         json.dump(dumpPlayers, f, indent=4)
+
+#         # Store points to DB
+#         collection.insert_many([dumpPlayers])
+
+# # If season points file exists, add new players information and update existing players information
+# else:
+#     with open('./Cricket-Fantasy-main/points/seasonPoints.json', 'r') as f:
+#         existPlayers = json.load(f)
+
+#     for key in players:
+#         if key in existPlayers:
+#             try:
+#                 existPlayers[key]['points'] += players[key]['points']   
+#             except KeyError:
+#                 pass
+#         else:
+#             try:
+#                 existPlayers[players[key]['pid']] = {'name': players[key]['name'], 'points': players[key]['points']}
+#             except KeyError:
+#                 pass
+    
+#     # with open('./Cricket-Fantasy-main/points/seasonPoints.json', 'w') as f:
+#     #     json.dump(existPlayers, f, indent=4)
+
+#         # As the points already exists, delete all the points and insert the new file to DB
+#         collection.delete_many({})
+#         collection.insert_many([existPlayers])
+
+# # Convert the match name to the desired format
+# # 'csk-vs-dc-2nd-match-indian-premier-league-2021' -> '2nd-match-csk-vs-dc-indian-premier-league-2021'
+# matchFileName = URL.split('/')[5]
+# orderedMatchFileName = matchFileName.split('-') 
+# orderedMatchFileName = np.array(orderedMatchFileName)
+# idx = [3, 4, 0, 1, 2, 5, 6, 7, 8]
+# matchFileName = '-'.join(orderedMatchFileName[idx])
+# matchCount += 1
+
+# # Create a file containing player information for a match 
+# with open('./Cricket-Fantasy-main/points/matchPoints/' + matchFileName + '.json', 'w') as f:
+#     json.dump(players, f, indent=4)
+#     print(matchFileName + ' is done!')
+
+# # Create a file for matches played
+# if not os.path.isfile('./Cricket-Fantasy-main/matches.json'):
+#     matchName[matchCount] = matchFileName
+
+#     with open('./Cricket-Fantasy-main/matches.json', 'w') as f:
+#         json.dump(matchName, f, indent=4)
+
+# else:
+#     with open('./Cricket-Fantasy-main/matches.json', 'r') as f:
+#         matches = json.load(f)
+#         matches[matchCount] = matchFileName
+    
+#     with open('./Cricket-Fantasy-main/matches.json', 'w') as f:
+#         json.dump(matches, f, indent=4)
