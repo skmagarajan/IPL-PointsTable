@@ -240,6 +240,28 @@ app.get('/team/E',(req,res) => {
 	});
 });
 
+app.get('/completed',(req,res) => {
+	MongoClient.connect(uri, function(err,db){
+		if(err)
+			throw err;
+		var dbo = db.db("matches");
+		// dbo.collection('matchesCompleted').findOne({},{"sort": { "_id": -1 }});
+		dbo.collection('matchesCompleted').findOne(
+			{},
+			{ sort: { _id: -1 } },
+			(err, data) => {
+				if(data)
+					var countKey = Object.keys(data).length;
+					if(countKey > 0)
+						res.send(data[countKey-1]);
+				else
+					res.send("No matched updated");
+			},
+		  );
+		db.close();
+	});
+});
+
 const PORT = process.env.PORT || 5001;
 
 app.listen(PORT);

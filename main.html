@@ -5,9 +5,14 @@
 <link rel="stylesheet" type="text/css" href="./css/style.css">
 <script>
 	var players = "";
-	var page_url = "https://ipltwenty20.herokuapp.com/";
-	//API to call points
+	var page_url = "https://ipltwenty20.herokuapp.com/"; //Updated in 3 places
+	var localhost_url = "http://localhost:5001/";
+	 
+	
 	$(document).ready(function(){
+		// document.getElementById('Dashboard').style.display = "block";
+		//API to call points
+	
 		players = $.ajax({
 	        url : page_url+"json",
 			async: false,
@@ -16,6 +21,17 @@
 				// players = JSON.parse(data);
 				call_teams('A'); 
 				document.getElementById('A').style.display = "block"; 
+			}
+        });
+
+		$.ajax({
+	        url : page_url+"completed",
+	        type: "GET",
+	        success: function(data){
+				// players = JSON.parse(data);
+				data = data.split("-");
+				var last_match_name = data[0].bold()+" "+data[1]+"-"+data[2].toUpperCase().bold()+" "+data[3]+" "+data[4].toUpperCase().bold();
+				document.getElementById('last').innerHTML = "Last Match Updated: " + last_match_name; 
 			}
         });
 	});
@@ -61,8 +77,8 @@
 			html += "</tr>";
 			// console.log(name['Pid']);
 		});
-		html += '<td>Total Points</td>';
-		html += '<td>'+total+'</td>';
+		html += '<td style="font-weight: bold;text-align:right;">Total Points:</td>';
+		html += '<td style="font-weight: bold;">'+total+'</td>';
 		html += "</table>";
 		document.getElementById(Team).innerHTML = html;
 	}
@@ -89,6 +105,28 @@
 		call_teams(Team);
 	}
 
+	function openDashboard(evt) {
+		// Declare all variables
+		var i, tabcontent, tablinks;
+
+		// Get all elements with class="tabcontent" and hide them
+		tabcontent = document.getElementsByClassName("tabcontent");
+		for (i = 0; i < tabcontent.length; i++) {
+			tabcontent[i].style.display = "none";
+		}
+
+		// Get all elements with class="tablinks" and remove the class "active"
+		tablinks = document.getElementsByClassName("tablinks");
+		for (i = 0; i < tablinks.length; i++) {
+			tablinks[i].className = tablinks[i].className.replace(" active", "");
+		}
+
+		// Show the current tab, and add an "active" class to the button that opened the tab
+		document.getElementById("Dashboard").style.display = "block";
+		evt.currentTarget.className += " active";
+		// call_teams(Team);
+	}
+
 
 </script>
 </head>
@@ -96,6 +134,7 @@
 	<!-- <div id="table"></div>
 	Tab links -->
 <div class="tab">
+	<!-- <button class="tablinks active" onclick="openDashboard(event)">Leaderboard</button> -->
 	<button class="tablinks active" onclick="openList(event, 'A')">Mayira Pochu</button>
 	<button class="tablinks" onclick="openList(event, 'B')">Sumo</button>
 	<button class="tablinks" onclick="openList(event, 'C')">Aanch Boonch XI</button>
@@ -104,9 +143,12 @@
 	<button class="tablinks" onclick="openList(event, 'F')">Vantha Vettuvom</button>
 	<button class="tablinks" onclick="openList(event, 'G')">Ellaam Kirubai</button>
 	<button class="tablinks" onclick="openList(event, 'H')">Akkamala Energy Boys</button>
-  </div>
+</div>
+
+<div id="last" style="text-align: center;margin: 20px;"></div>
   
   <!-- Tab content -->
+  <!-- <div id="Dashboard" class="tabcontent" style="width: 100%;">Coming Soon!</div> -->
   <div id="A" class="tabcontent"></div>
   <div id="B" class="tabcontent"></div>
   <div id="C" class="tabcontent"></div> 
