@@ -3,8 +3,10 @@
 	overflow: hidden;
 	border: 1px solid #ccc;
 	background-color: #f1f1f1;
-	width: fit-content;
+	/* width: fit-content; */
     margin: 0px auto;
+	display: grid;
+	width: 50%;
   }
   
   /* Style the buttons that are used to open the tab content */
@@ -17,8 +19,8 @@
 	padding: 14px 16px;
 	transition: 0.3s;
 	color: black;
-	border-right: 2px solid;
-    border-left: 2px solid;
+	/* border-right: 2px solid; */
+    /* border-left: 2px solid; */
   }
   
   /* Change background color of buttons on hover */
@@ -40,12 +42,12 @@
   }
 
 body{
-	margin: 10px 0px;
+	margin: 20px 0px;
 }
 
 table {
 	margin: 0px auto;
-	width: 25%;
+	width: 50%;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 	display: table;
 	border-collapse: collapse;
@@ -65,5 +67,23 @@ td,th{
 	font-family: 'Yantramanav', sans-serif;
 	font-size: 16px;
 }
+
+@media only screen and (max-width: 600px) {
+	table,.tab {
+		width: 100%;
+	}
+
+	.col-4{
+		padding: 0px;
+	}
+
+	.tab button{
+		padding: 5px;
+	}
+
+	body{
+		margin: 0px;
+	}
+  }
 
 

@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
 <link rel="stylesheet" type="text/css" href="./css/style.css">
 <script>
@@ -31,7 +37,7 @@
 				// players = JSON.parse(data);
 				data = data.split("-");
 				var last_match_name = data[0].bold()+" "+data[1]+"-"+data[2].toUpperCase().bold()+" "+data[3]+" "+data[4].toUpperCase().bold();
-				document.getElementById('last').innerHTML = "Last Match Updated: " + last_match_name; 
+				document.getElementById('last').innerHTML = "Last Match Updated: <br />" + last_match_name; 
 			}
         });
 	});
@@ -133,19 +139,41 @@
 <body>
 	<!-- <div id="table"></div>
 	Tab links -->
-<div class="tab">
-	<!-- <button class="tablinks active" onclick="openDashboard(event)">Leaderboard</button> -->
-	<button class="tablinks active" onclick="openList(event, 'A')">Mayira Pochu</button>
-	<button class="tablinks" onclick="openList(event, 'B')">Sumo</button>
-	<button class="tablinks" onclick="openList(event, 'C')">Aanch Boonch XI</button>
-	<button class="tablinks" onclick="openList(event, 'D')">Lapalapa Naa Ilapa XI</button>
-	<button class="tablinks" onclick="openList(event, 'E')">Aelay Cricket Club - ACC</button>
-	<button class="tablinks" onclick="openList(event, 'F')">Vantha Vettuvom</button>
-	<button class="tablinks" onclick="openList(event, 'G')">Ellaam Kirubai</button>
-	<button class="tablinks" onclick="openList(event, 'H')">Akkamala Energy Boys</button>
-</div>
+	<div class="container">
+		<div class="row">
+			<h4 class="text-center">IPL Points</h4>
+			<div class="col-4 col-lg-4">
+				<div class="tab">
+					<div id="last" style="text-align: center;margin: 5px;"></div>
+					<hr style="margin: 0px;">
+					<!-- <button class="tablinks active" onclick="openDashboard(event)">Leaderboard</button> -->
+					<button class="tablinks active" onclick="openList(event, 'A')">Mayira Pochu</button>
+					<button class="tablinks" onclick="openList(event, 'B')">Sumo</button>
+					<button class="tablinks" onclick="openList(event, 'C')">Aanch Boonch XI</button>
+					<button class="tablinks" onclick="openList(event, 'D')">Lapalapa Naa Ilapa XI</button>
+					<button class="tablinks" onclick="openList(event, 'E')">Aelay Cricket Club - ACC</button>
+					<button class="tablinks" onclick="openList(event, 'F')">Vantha Vettuvom</button>
+					<button class="tablinks" onclick="openList(event, 'G')">Ellaam Kirubai</button>
+					<button class="tablinks" onclick="openList(event, 'H')">Akkamala Energy Boys</button>
+				</div>
+			</div>
+			<div class="col-8 col-lg-8">
+				<!-- Tab content -->
+				<!-- <div id="Dashboard" class="tabcontent" style="width: 100%;">Coming Soon!</div> -->
+				<div id="A" class="tabcontent"></div>
+				<div id="B" class="tabcontent"></div>
+				<div id="C" class="tabcontent"></div> 
+				<div id="D" class="tabcontent"></div>
+				<div id="E" class="tabcontent"></div>
+				<div id="F" class="tabcontent"></div>
+				<div id="G" class="tabcontent"></div> 
+				<div id="H" class="tabcontent"></div>
+			</div>
+		</div>
+	</div>
 
-<div id="last" style="text-align: center;margin: 20px;"></div>
+
+	<div id="last" style="text-align: center;margin: 20px;"></div>
   
   <!-- Tab content -->
   <!-- <div id="Dashboard" class="tabcontent" style="width: 100%;">Coming Soon!</div> -->
